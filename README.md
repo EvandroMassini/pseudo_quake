@@ -8,7 +8,13 @@ Um jogo de tiro em primeira pessoa no navegador, inspirado no **Quake** (id Soft
 
 ---
 
-## Como jogar
+## Jogue agora
+
+**[▶ Jogar online no GitHub Pages](https://evandromassini.github.io/pseudo_quake/)**
+
+Repositório: <https://github.com/EvandroMassini/pseudo_quake>
+
+## Como jogar localmente
 
 É preciso internet apenas para carregar o Three.js pela CDN (jsDelivr).
 
