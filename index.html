@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>QUAKE CLONE</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Metal+Mania&family=Cinzel:wght@500;800&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;height:100%;background:#000;overflow:hidden;color:#cfae82;font-family:'Cinzel',Georgia,serif;user-select:none}
+  canvas#gl{position:fixed;inset:0;width:100%;height:100%;display:block}
+  #vig{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.65) 100%)}
+  #flash,#tint{position:fixed;inset:0;pointer-events:none;opacity:0}
+  #tint{opacity:1}
+  #cross{position:fixed;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;pointer-events:none;opacity:.75}
+  #cross:before,#cross:after{content:"";position:absolute;background:#d9b87a;box-shadow:0 0 2px #000}
+  #cross:before{left:8px;top:2px;width:2px;height:14px}#cross:after{top:8px;left:2px;height:2px;width:14px}
+  #cross{--g:5px}
+  #cross i{position:absolute;left:6px;top:6px;width:6px;height:6px;background:#000;display:block}
+  #msg{position:fixed;left:18px;top:14px;font-size:17px;color:#e6c88e;text-shadow:0 2px 0 #000,0 0 6px #000;pointer-events:none;font-weight:500}
+  #msg div{transition:opacity .7s;margin-bottom:2px}
+  #banner{position:fixed;left:0;right:0;top:22%;text-align:center;pointer-events:none;opacity:0;transition:opacity 1.2s;text-shadow:0 3px 0 #000,0 0 18px #000}
+  #banner h2{font-family:'Metal Mania',serif;font-size:46px;margin:0;color:#c9302a;font-weight:400;letter-spacing:2px}
+  #banner p{margin:6px 0 0;font-size:19px;color:#cfae82}
+  #stats{position:fixed;right:18px;top:14px;font-size:15px;color:#b89a6a;text-shadow:0 2px 0 #000;pointer-events:none}
+  #hud{position:fixed;left:0;right:0;bottom:0;pointer-events:none}
+  #weps{display:flex;gap:6px;justify-content:center;margin-bottom:6px}
+  @media(max-width:1000px){.bar{gap:16px}.slot{min-width:80px}}
+  .w{width:56px;text-align:center;padding:3px 0;font-size:11px;background:rgba(20,12,6,.55);border:1px solid #3a2a1c;color:#5a4630;border-radius:2px}
+  .w b{display:block;font-size:15px}.w.own{color:#c9a26a;border-color:#6a4e32}.w.cur{background:rgba(150,70,20,.75);color:#fff;border-color:#e0a050}
+  .bar{display:flex;align-items:center;justify-content:center;gap:34px;height:76px;background:linear-gradient(#4d3826,#2b1d12 60%,#1d130b);border-top:3px solid #7a5a3a;box-shadow:inset 0 2px 0 #8a6a48,0 -6px 20px rgba(0,0,0,.6)}
+  .slot{text-align:center;min-width:110px}.slot small{display:block;font-size:11px;letter-spacing:2px;color:#8d7250}
+  .slot span.n,#hAmmo,#hHp,#hArm{font-family:'Metal Mania','Impact',serif;font-size:46px;color:#d9a65c;text-shadow:0 3px 0 #000,0 0 10px rgba(255,150,40,.25);letter-spacing:2px}
+  #hHp.low{color:#e03a30;animation:pulse .6s infinite alternate}@keyframes pulse{to{opacity:.55}}
+  canvas#face{width:64px;height:64px;image-rendering:pixelated;border:3px ridge #6a4e32;background:#222}
+  #ammoList{font-size:14px;color:#b89a6a;line-height:1.3;text-align:left;white-space:nowrap;min-width:120px}#ammoList b{color:#e0b878}
+  #pows{position:fixed;left:18px;bottom:130px;font-size:18px;font-weight:800;text-shadow:0 2px 0 #000}
+  #lives{color:#c9503a;font-size:20px;letter-spacing:1px}
+  .key{display:none;width:12px;height:12px;border-radius:50%;margin-left:6px;vertical-align:middle}
+  #keyG{background:#ffcc33;box-shadow:0 0 8px #ffcc33}#keyS{background:#b8c8ff;box-shadow:0 0 8px #9fb8ff}
+  .ov{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:rgba(0,0,0,.84)}
+  #menu{background:radial-gradient(ellipse at 50% 30%,#3a0e08 0%,#0b0403 70%)}
+  h1{font-family:'Metal Mania',serif;font-weight:400;font-size:clamp(70px,13vw,160px);margin:0;color:#b8221c;letter-spacing:6px;text-shadow:0 6px 0 #000,0 0 40px rgba(200,30,20,.55)}
+  .sub{font-size:20px;letter-spacing:6px;color:#9d7f58;margin:-4px 0 34px}
+  .ov button{font-family:'Cinzel',serif;font-size:20px;font-weight:800;letter-spacing:3px;color:#d8b88a;background:linear-gradient(#4a3524,#2a1c11);border:2px solid #7a5a3a;padding:11px 28px;margin:5px;cursor:pointer;min-width:190px}
+  .ov button:hover{background:linear-gradient(#7a3a18,#4a2210);color:#fff;border-color:#e0a050}
+  .ov button.sel{border-color:#d0903a}
+  .help{margin-top:26px;font-size:15px;line-height:1.6;color:#8d7250;max-width:760px}.help b{color:#d0a870}
+  .set{margin-top:14px;font-size:14px;color:#8d7250;display:grid;grid-template-columns:repeat(2,auto);gap:6px 24px}
+  .set label{display:flex;gap:8px;align-items:center;justify-content:space-between}
+  h3{font-family:'Metal Mania',serif;font-weight:400;font-size:54px;margin:0 0 14px;color:#c9302a}
+  #death h3{font-size:90px;color:#a01410}
+  #inter p{font-size:24px;line-height:1.8}#inter b{color:#e0b060}
+  #loading{background:#000}#loadTxt{font-size:28px;color:#b8221c;letter-spacing:4px;animation:pulse .8s infinite alternate}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="tint"></div><div id="flash"></div><div id="vig"></div>
+<div id="cross"></div>
+<div id="msg"></div><div id="banner"></div><div id="stats"></div><div id="pows"></div>
+<div id="hud">
+  <div id="weps"></div>
+  <div class="bar">
+    <div class="slot"><small>ARMADURA</small><span id="hArm">0</span></div>
+    <div class="slot"><small>SAÚDE</small><span id="hHp">100</span></div>
+    <canvas id="face" width="48" height="48"></canvas>
+    <div class="slot"><small id="hAmmoN">ESCOPETA</small><span id="hAmmo">25</span></div>
+    <div id="ammoList">Cartuchos <b id="aS">0</b><br>Pregos <b id="aN">0</b><br>Foguetes <b id="aR">0</b></div>
+    <div class="slot"><small>VIDAS</small><span id="lives">♥ x3</span><div><span class="key" id="keyG"></span><span class="key" id="keyS"></span></div></div>
+  </div>
+</div>
+
+<div id="menu" class="ov">
+  <h1>QUAKE</h1><div class="sub">C L O N E &nbsp;·&nbsp; O P E S A D E L O &nbsp;C O M E Ç A</div>
+  <div id="diffs"></div>
+  <div class="help"><b>WASD</b> mover · <b>Mouse</b> mirar · <b>Clique esquerdo</b> atirar · <b>Espaço</b> pular · <b>Shift</b> andar devagar · <b>1–6 / roda</b> armas · <b>E</b> usar (segredos)<br>
+  Pule e gire no ar para ganhar velocidade (strafe jump). Atire foguetes no chão para um <b>rocket jump</b>.<br>Encontre a <b>chave</b> da fase e leve-a até a porta trancada para alcançar o portal de saída. Você tem <b>3 vidas</b>.</div>
+  <div class="set">
+    <label>Sensibilidade <input id="sSens" type="range" min="0.2" max="3" step="0.05" value="1"></label>
+    <label>Campo de visão <input id="sFov" type="range" min="60" max="110" step="1" value="78"></label>
+    <label>Volume <input id="sVol" type="range" min="0" max="1" step="0.05" value="0.8"></label>
+    <label>Música <input id="sMus" type="range" min="0" max="1" step="0.05" value="0.55"></label>
+    <label>Inverter mouse <input id="sInv" type="checkbox"></label>
+  </div>
+</div>
+<div id="pause" class="ov"><h3>PAUSADO</h3><button id="resume">CONTINUAR</button><div class="help">Ajuste sensibilidade, volume e FOV no menu inicial (reinicie para alterar).</div></div>
+<div id="death" class="ov"><h3>VOCÊ MORREU</h3><p id="deadTxt" style="font-size:22px"></p><button id="deadBtn">RENASCER</button></div>
+<div id="inter" class="ov"><h3 id="interTitle"></h3><p id="interStats"></p><button id="interBtn">PRÓXIMA FASE</button></div>
+<div id="victory" class="ov"><h3 style="font-size:80px">CHTHON DERROTADO</h3><p style="font-size:22px;max-width:640px">Você sobreviveu aos horrores das quatro dimensões e selou os portões do inferno. A Terra está a salvo... por enquanto.</p><button id="victoryBtn">MENU PRINCIPAL</button></div>
+<div id="loading" class="ov" style="display:none"><div id="loadTxt">CARREGANDO...</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+<script src="js/util.js"></script>
+<script src="js/textures.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/audio2.js"></script>
+<script src="js/level.js"></script>
+<script src="js/fx.js"></script>
+<script src="js/entities.js"></script>
+<script src="js/models.js"></script>
+<script src="js/weapons.js"></script>
+<script src="js/gunmodels.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
